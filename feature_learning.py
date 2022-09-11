@@ -104,7 +104,7 @@ def __build_model__(ModelName, qtd_categorias, dimensoes_entrada, froze=0.8):
     return model
 
 
-def training(labels, qtd_imagens_lote, altura_imagem, largura_imagem, arquitetura, valor_paciencia, qtd_epocas, taxa_aprendizagem, qtd_categorias, dimensoes_entrada):
+def training(labels, qtd_imagens_lote, altura_imagem, largura_imagem, arquitetura, valor_paciencia, qtd_epocas, taxa_aprendizagem, qtd_categorias, dimensoes_entrada, diretorio):
     # variavel irá conter a acuracia de todos os folds
     acuracias = []
 
@@ -150,8 +150,8 @@ def training(labels, qtd_imagens_lote, altura_imagem, largura_imagem, arquitetur
 
         model.compile(optimizer=Adam(lr=taxa_aprendizagem), loss='categorical_crossentropy', metrics=['accuracy'])
 
-        dados_treino = DataGenerator.criar_treino(labels_treino, qtd_imagens_lote, (altura_imagem, largura_imagem, 3), augment=True)
-        dados_validacao = DataGenerator.criar_validacao(labels_validacao, qtd_imagens_lote, (altura_imagem, largura_imagem, 3), augment=False)
+        dados_treino = DataGenerator.criar_treino(labels_treino, qtd_imagens_lote, (altura_imagem, largura_imagem, 3), qtd_categorias, diretorio, augment=True)
+        dados_validacao = DataGenerator.criar_validacao(labels_validacao, qtd_imagens_lote, (altura_imagem, largura_imagem, 3), qtd_categorias, diretorio, augment=False)
 
 
         # Em cada epoca (epoch), irá percorrer de forma aleatoria os dados de treino, e em seguida serão validados. A melhor perfomance é salva.
@@ -188,7 +188,7 @@ def training(labels, qtd_imagens_lote, altura_imagem, largura_imagem, arquitetur
 
         # TODO A acurácia é medida pelos dados de testes?
         labels_teste = __get_labels__('test', i, labels)
-        dados_teste = DataGenerator.criar_validacao(labels_teste, qtd_imagens_lote, (altura_imagem, largura_imagem, 3), augment=False)
+        dados_teste = DataGenerator.criar_validacao(labels_teste, qtd_imagens_lote, (altura_imagem, largura_imagem, 3), qtd_categorias, diretorio, augment=False)
         acuracia = model.evaluate_generator(dados_teste, steps=labels_teste.shape[0] // qtd_imagens_lote)[1]
         acuracias.append(acuracia)
 
@@ -239,7 +239,7 @@ def main(path_diretorio, seed, arquitetura, altura_imagem, largura_imagem, qtd_i
         dimensoes_entrada = (largura_imagem, altura_imagem, 3)
 
     todos_labels, qtd_categorias = pre_processing(path_diretorio)
-    training(todos_labels, qtd_imagens_lote, altura_imagem, largura_imagem, arquitetura, valor_paciencia, qtd_epocas, taxa_aprendizagem, qtd_categorias, dimensoes_entrada)
+    training(todos_labels, qtd_imagens_lote, altura_imagem, largura_imagem, arquitetura, valor_paciencia, qtd_epocas, taxa_aprendizagem, qtd_categorias, dimensoes_entrada, path_diretorio)
 
     t_finish = time.time()
     print(f"Tempo de execução: {(t_finish - t_start) / 3600} horas")
