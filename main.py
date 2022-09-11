@@ -82,13 +82,10 @@ import feature_learning
     type=int
 )
 def main(architecture, path, seed, height_image, width_image, quantity_images_batch, patience, epochs, learning_rate):
-    print("Architecture: " % architecture)
+    print(f"Architecture: {architecture}")
 
     feature_learning.main(path, seed, architecture, height_image, width_image, quantity_images_batch, patience,
                           epochs, learning_rate)
-
-    # extract_features(model, patches, folds, height, width,
-    #                  input_file_format_string, output_file_format_string, gpuid)
 
 
 if __name__ == "__main__":
