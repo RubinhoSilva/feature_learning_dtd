@@ -40,12 +40,11 @@ def pre_processing(path_diretorio):
     for id_categoria, categoria in enumerate(categorias):
         # obtem todos os arquivos dessa categoria, e percorre por eles no for
         for arquivo in os.listdir(os.path.join(path_diretorio, categoria)):
-
             # verifica se realmente é um arquivo
-            if isfile(arquivo):
-                # adiciona e uma nova lista os dados formatados. Cada elemento esta da seguinte forma
-                # ['categoria/nome_arquivo.extensao_arquivo', 'categoria', id_categoria]
-                labels.append(['{}/{}'.format(categoria, arquivo), categoria, id_categoria])
+            # if isfile(arquivo):
+            # adiciona e uma nova lista os dados formatados. Cada elemento esta da seguinte forma
+            # ['categoria/nome_arquivo.extensao_arquivo', 'categoria', id_categoria]
+            labels.append(['{}/{}'.format(categoria, arquivo), categoria, id_categoria])
 
     # transforma a lista para que ele tenha cabeçalho
     return pd.DataFrame(labels, columns=['imagem_nome', 'categoria', 'id_categoria']), qtd_categorias
