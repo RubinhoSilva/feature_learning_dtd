@@ -1,3 +1,5 @@
+import os
+
 import click
 
 import feature_learning
@@ -83,6 +85,9 @@ import feature_learning
 )
 def main(architecture, path, seed, height_image, width_image, quantity_images_batch, patience, epochs, learning_rate):
     print(f"Architecture: {architecture}")
+
+    if not os.path.isdir(architecture):
+        os.mkdir(architecture)
 
     feature_learning.main(path, seed, architecture, height_image, width_image, quantity_images_batch, patience,
                           epochs, learning_rate)

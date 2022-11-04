@@ -103,12 +103,21 @@ def __build_model__(ModelName, qtd_categorias, dimensoes_entrada, froze=0.8):
     return model
 
 
-def training(labels, qtd_imagens_lote, altura_imagem, largura_imagem, arquitetura, valor_paciencia, qtd_epocas, taxa_aprendizagem, qtd_categorias, dimensoes_entrada, diretorio):
+def training(labels, qtd_imagens_lote, altura_imagem, largura_imagem, arquitetura, valor_paciencia, qtd_epocas,
+             taxa_aprendizagem, qtd_categorias, dimensoes_entrada, diretorio):
     # variavel irá conter a acuracia de todos os folds
     acuracias = []
 
     # esse for percorre os 10 folds
     for i in range(1, 11):
+        print("Fold {}".format(i))
+
+        if os.path.exists("{}/Fold_{}.txt".format(arquitetura, i)):
+            arquivo_acurarias = open("{}/Fold_{}.txt".format(arquitetura, i), "r")
+            print("\nFold {}/{} acurácia = {}".format(i, 10, arquivo_acurarias.readline()))
+            arquivo_acurarias.close()
+            continue
+
         labels_treino = __get_labels__('train', i, labels)
         labels_validacao = __get_labels__('val', i, labels)
 
@@ -116,7 +125,7 @@ def training(labels, qtd_imagens_lote, altura_imagem, largura_imagem, arquitetur
         K.clear_session()
 
         # arquivo para em que salvam o melhores resultados
-        arquivo_melhor_model = "{}_weights.best.hdf5".format(arquitetura)
+        arquivo_melhor_model = "{}/weights.best.hdf5".format(arquitetura)
 
         checkpoint = ModelCheckpoint(
             arquivo_melhor_model,
@@ -147,11 +156,16 @@ def training(labels, qtd_imagens_lote, altura_imagem, largura_imagem, arquitetur
 
         model = __build_model__(arquitetura, qtd_categorias, dimensoes_entrada)
 
+        if os.path.exists("{}/weights.best.hdf5".format(arquitetura)):
+            model.load_weights("{}/weights.best.hdf5".format(arquitetura))
+
         model.compile(optimizer=Adam(lr=taxa_aprendizagem), loss='categorical_crossentropy', metrics=['accuracy'])
 
-        dados_treino = DataGenerator.criar_treino(labels_treino, qtd_imagens_lote, (altura_imagem, largura_imagem, 3), qtd_categorias, diretorio, augment=True)
-        dados_validacao = DataGenerator.criar_validacao(labels_validacao, qtd_imagens_lote, (altura_imagem, largura_imagem, 3), qtd_categorias, diretorio, augment=False)
-
+        dados_treino = DataGenerator.criar_treino(labels_treino, qtd_imagens_lote, (altura_imagem, largura_imagem, 3),
+                                                  qtd_categorias, diretorio, augment=True)
+        dados_validacao = DataGenerator.criar_validacao(labels_validacao, qtd_imagens_lote,
+                                                        (altura_imagem, largura_imagem, 3), qtd_categorias, diretorio,
+                                                        augment=False)
 
         # Em cada epoca (epoch), irá percorrer de forma aleatoria os dados de treino, e em seguida serão validados. A melhor perfomance é salva.
 
@@ -184,15 +198,21 @@ def training(labels, qtd_imagens_lote, altura_imagem, largura_imagem, arquitetur
         print('Carregando melhor modelo')
         model.load_weights(arquivo_melhor_model)
 
-
         # TODO A acurácia é medida pelos dados de testes?
         labels_teste = __get_labels__('test', i, labels)
-        dados_teste = DataGenerator.criar_validacao(labels_teste, qtd_imagens_lote, (altura_imagem, largura_imagem, 3), qtd_categorias, diretorio, augment=False)
+        dados_teste = DataGenerator.criar_validacao(labels_teste, qtd_imagens_lote, (altura_imagem, largura_imagem, 3),
+                                                    qtd_categorias, diretorio, augment=False)
         acuracia = model.evaluate_generator(dados_teste, steps=labels_teste.shape[0] // qtd_imagens_lote)[1]
         acuracias.append(acuracia)
 
         # 10 é pq são 10 folds
         print("\nFold {}/{} acurácia = {:.3f}".format(i, 10, acuracia))
+
+        arquivo_acurarias = open("{}/Fold_{}.txt".format(arquitetura, i), "x")
+        arquivo_acurarias.write(str(acuracia))
+        arquivo_acurarias.close()
+
+    print(acuracias)
 
 
 def __get_labels__(tipo, fold, todos_labels):
@@ -218,7 +238,8 @@ def __get_labels__(tipo, fold, todos_labels):
     return todos_labels[todos_labels['imagem_nome'].isin(imagens)]
 
 
-def main(path_diretorio, seed, arquitetura, altura_imagem, largura_imagem, qtd_imagens_lote, valor_paciencia, qtd_epocas, taxa_aprendizagem):
+def main(path_diretorio, seed, arquitetura, altura_imagem, largura_imagem, qtd_imagens_lote, valor_paciencia,
+         qtd_epocas, taxa_aprendizagem):
     np.random.seed(seed)
     tf.random.set_seed(seed)
     ia.seed(seed)
@@ -238,7 +259,8 @@ def main(path_diretorio, seed, arquitetura, altura_imagem, largura_imagem, qtd_i
         dimensoes_entrada = (largura_imagem, altura_imagem, 3)
 
     todos_labels, qtd_categorias = pre_processing(path_diretorio)
-    training(todos_labels, qtd_imagens_lote, altura_imagem, largura_imagem, arquitetura, valor_paciencia, qtd_epocas, taxa_aprendizagem, qtd_categorias, dimensoes_entrada, path_diretorio)
+    training(todos_labels, qtd_imagens_lote, altura_imagem, largura_imagem, arquitetura, valor_paciencia, qtd_epocas,
+             taxa_aprendizagem, qtd_categorias, dimensoes_entrada, path_diretorio)
 
     t_finish = time.time()
     print(f"Tempo de execução: {(t_finish - t_start) / 3600} horas")
