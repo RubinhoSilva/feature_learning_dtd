@@ -14,7 +14,6 @@ import feature_learning
         'VGG16',
         'VGG19',
         'ResNet50',
-        'ResNet50',
         'InceptionV3',
         'InceptionResNetV2',
         'MobileNet',
@@ -24,7 +23,6 @@ import feature_learning
         'NASNetMobile',
         'NASNetLarge',
         'EfficientNetV2L',
-        'ResNet50',
     ]),
     help='Which architecture will be used to extract the features',
     required=True
